@@ -37,6 +37,11 @@ setTimeout(() => window.toastr && toastr.info('Avatar Viewer loaded'), 2000);
     overlay.append(img, btn);
     document.body.appendChild(overlay);
 
+    const r = overlay.getBoundingClientRect();
+toastr.info(`overlay ${Math.round(r.width)}x${Math.round(r.height)} z=${getComputedStyle(overlay).zIndex}`);
+img.addEventListener('load', () => toastr.success(`img ok ${img.naturalWidth}x${img.naturalHeight}`));
+img.addEventListener('error', () => toastr.error('img error ' + img.src));
+
     let x = 0, y = 0, s = 1, startDist = 0, startS = 1, moved = false, onBg = false;
     const pts = new Map();
     const apply = () => { img.style.transform = `translate(${x}px,${y}px) scale(${s})`; };

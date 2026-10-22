@@ -1,0 +1,9 @@
+{
+  "display_name": "Avatar Viewer",
+  "loading_order": 10,
+  "requires": [],
+  "optional": [],
+  "js": "index.js",
+  "author": "me",
+  "version": "1.0.0"
+}

@@ -1,5 +1,5 @@
 (() => {
-  let overlay = null;
+  let win = null;
 
   function fullSrc(src) {
     try {
@@ -13,73 +13,87 @@
   }
 
   function close() {
-    if (overlay) { overlay.remove(); overlay = null; }
+    if (win) { win.remove(); win = null; }
   }
 
   function open(src) {
     close();
-    overlay = document.createElement('div');
-    overlay.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;height:100dvh;z-index:99999;background:rgba(0,0,0,.92);touch-action:none;overflow:hidden;display:flex;align-items:center;justify-content:center';
+    const w0 = Math.min(Math.round(innerWidth * 0.6), 320);
+    win = document.createElement('div');
+    win.style.cssText = `position:fixed;left:${innerWidth - w0 - 12}px;top:90px;width:${w0}px;z-index:99999;touch-action:none;user-select:none;-webkit-user-select:none;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.5)`;
 
     const img = document.createElement('img');
     img.draggable = false;
-    img.style.cssText = 'max-width:100vw;max-height:100vh;max-height:100dvh;user-select:none;-webkit-user-drag:none;will-change:transform';
+    img.style.cssText = 'display:block;width:100%;height:auto;border-radius:10px;pointer-events:none;-webkit-user-drag:none';
     let fellBack = false;
     img.onerror = () => { if (!fellBack) { fellBack = true; img.src = src; } };
     img.src = fullSrc(src);
 
     const btn = document.createElement('div');
     btn.textContent = '✕';
-    btn.style.cssText = 'position:absolute;top:16px;right:16px;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.15);color:#fff;font-size:20px;display:flex;align-items:center;justify-content:center;z-index:2';
-    btn.addEventListener('click', close);
+    btn.style.cssText = 'position:absolute;top:6px;right:6px;width:28px;height:28px;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer';
+    btn.addEventListener('pointerdown', e => e.stopPropagation());
+    btn.addEventListener('pointerup', e => { e.stopPropagation(); close(); });
 
-    overlay.append(img, btn);
-    document.documentElement.appendChild(overlay);
+    win.append(img, btn);
+    document.documentElement.appendChild(win);
 
-    let x = 0, y = 0, s = 1, startDist = 0, startS = 1, moved = false, onBg = false;
+    // не даём окну забирать фокус у поля ввода
+    win.addEventListener('mousedown', e => e.preventDefault());
+    win.addEventListener('touchstart', e => e.preventDefault(), { passive: false });
+
     const pts = new Map();
-    const apply = () => { img.style.transform = `translate(${x}px,${y}px) scale(${s})`; };
+    let startDist = 0, startW = 0;
     const dist = () => { const [a, b] = [...pts.values()]; return Math.hypot(a.x - b.x, a.y - b.y); };
+    const num = v => parseFloat(v) || 0;
 
-    overlay.addEventListener('pointerdown', e => {
-      if (e.target === btn) return;
-      if (pts.size === 0) { onBg = e.target === overlay; moved = false; }
-      overlay.setPointerCapture(e.pointerId);
+    function resize(newW) {
+      const w = win.offsetWidth, h = win.offsetHeight;
+      newW = Math.min(innerWidth * 2, Math.max(80, newW));
+      const cx = num(win.style.left) + w / 2;
+      const cy = num(win.style.top) + h / 2;
+      const newH = h * newW / w;
+      win.style.width = newW + 'px';
+      win.style.left = (cx - newW / 2) + 'px';
+      win.style.top = (cy - newH / 2) + 'px';
+    }
+
+    function clamp() {
+      const w = win.offsetWidth;
+      const l = Math.min(innerWidth - 60, Math.max(60 - w, num(win.style.left)));
+      const t = Math.min(innerHeight - 60, Math.max(0, num(win.style.top)));
+      win.style.left = l + 'px';
+      win.style.top = t + 'px';
+    }
+
+    win.addEventListener('pointerdown', e => {
+      win.setPointerCapture(e.pointerId);
       pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
-      if (pts.size === 2) { startDist = dist(); startS = s; }
+      if (pts.size === 2) { startDist = dist(); startW = win.offsetWidth; }
     });
 
-    overlay.addEventListener('pointermove', e => {
+    win.addEventListener('pointermove', e => {
       const p = pts.get(e.pointerId);
       if (!p) return;
       if (pts.size === 1) {
-        const dx = e.clientX - p.x, dy = e.clientY - p.y;
-        if (Math.abs(dx) + Math.abs(dy) > 2) moved = true;
-        x += dx; y += dy;
+        win.style.left = (num(win.style.left) + e.clientX - p.x) + 'px';
+        win.style.top = (num(win.style.top) + e.clientY - p.y) + 'px';
+        p.x = e.clientX; p.y = e.clientY;
+        clamp();
+      } else if (pts.size === 2) {
+        p.x = e.clientX; p.y = e.clientY;
+        resize(startW * dist() / startDist);
       }
-      p.x = e.clientX; p.y = e.clientY;
-      if (pts.size === 2) {
-        s = Math.min(8, Math.max(0.5, startS * dist() / startDist));
-        moved = true;
-      }
-      apply();
     });
 
-    const up = e => {
-      if (!pts.has(e.pointerId)) return;
-      pts.delete(e.pointerId);
-      if (pts.size === 0 && !moved && onBg) close();
-    };
-    overlay.addEventListener('pointerup', up);
-    overlay.addEventListener('pointercancel', up);
+    const up = e => { pts.delete(e.pointerId); };
+    win.addEventListener('pointerup', up);
+    win.addEventListener('pointercancel', up);
 
-    overlay.addEventListener('wheel', e => {
+    win.addEventListener('wheel', e => {
       e.preventDefault();
-      s = Math.min(8, Math.max(0.5, s * (e.deltaY < 0 ? 1.1 : 0.9)));
-      apply();
+      resize(win.offsetWidth * (e.deltaY < 0 ? 1.1 : 0.9));
     }, { passive: false });
-
-    overlay.addEventListener('dblclick', () => { x = 0; y = 0; s = 1; apply(); });
   }
 
   window.addEventListener('click', e => {

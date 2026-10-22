@@ -108,4 +108,17 @@
   }, true);
 
   document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+
+    // Не открывать клавиатуру сама: фокус в поле ввода только после касания по нему
+  if (matchMedia('(pointer: coarse)').matches) {
+    let lastTap = 0;
+    document.addEventListener('pointerdown', e => {
+      if (e.target.closest && e.target.closest('#send_textarea')) lastTap = Date.now();
+    }, true);
+    document.addEventListener('focusin', e => {
+      if (e.target.id === 'send_textarea' && Date.now() - lastTap > 1000) {
+        e.target.blur();
+      }
+    }, true);
+  }
 })();

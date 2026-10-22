@@ -20,7 +20,7 @@
     close();
     const w0 = Math.min(Math.round(innerWidth * 0.6), 320);
     win = document.createElement('div');
-    win.style.cssText = `position:fixed;left:${innerWidth - w0 - 12}px;top:90px;width:${w0}px;z-index:200;touch-action:none;user-select:none;-webkit-user-select:none;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.5)`;
+    win.style.cssText = `position:fixed;left:${innerWidth - w0 - 12}px;top:90px;width:${w0}px;z-index:1000;touch-action:none;user-select:none;-webkit-user-select:none;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.5)`;
 
     const img = document.createElement('img');
     img.draggable = false;
@@ -36,7 +36,7 @@
     btn.addEventListener('pointerup', e => { e.stopPropagation(); close(); });
 
     win.append(img, btn);
-    document.documentElement.appendChild(win);
+    document.body.appendChild(win);
 
     // не даём окну забирать фокус у поля ввода
     win.addEventListener('mousedown', e => e.preventDefault());

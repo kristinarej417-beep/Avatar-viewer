@@ -1,4 +1,3 @@
-setTimeout(() => window.toastr && toastr.info('Avatar Viewer loaded'), 2000);
 (() => {
   let overlay = null;
 
@@ -20,11 +19,11 @@ setTimeout(() => window.toastr && toastr.info('Avatar Viewer loaded'), 2000);
   function open(src) {
     close();
     overlay = document.createElement('div');
-    overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.92);touch-action:none;overflow:hidden;display:flex;align-items:center;justify-content:center';
+    overlay.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;height:100dvh;z-index:99999;background:rgba(0,0,0,.92);touch-action:none;overflow:hidden;display:flex;align-items:center;justify-content:center';
 
     const img = document.createElement('img');
     img.draggable = false;
-    img.style.cssText = 'max-width:100%;max-height:100%;user-select:none;-webkit-user-drag:none;will-change:transform';
+    img.style.cssText = 'max-width:100vw;max-height:100vh;max-height:100dvh;user-select:none;-webkit-user-drag:none;will-change:transform';
     let fellBack = false;
     img.onerror = () => { if (!fellBack) { fellBack = true; img.src = src; } };
     img.src = fullSrc(src);
@@ -35,12 +34,7 @@ setTimeout(() => window.toastr && toastr.info('Avatar Viewer loaded'), 2000);
     btn.addEventListener('click', close);
 
     overlay.append(img, btn);
-    document.body.appendChild(overlay);
-
-    const r = overlay.getBoundingClientRect();
-toastr.info(`overlay ${Math.round(r.width)}x${Math.round(r.height)} z=${getComputedStyle(overlay).zIndex}`);
-img.addEventListener('load', () => toastr.success(`img ok ${img.naturalWidth}x${img.naturalHeight}`));
-img.addEventListener('error', () => toastr.error('img error ' + img.src));
+    document.documentElement.appendChild(overlay);
 
     let x = 0, y = 0, s = 1, startDist = 0, startS = 1, moved = false, onBg = false;
     const pts = new Map();
@@ -89,17 +83,15 @@ img.addEventListener('error', () => toastr.error('img error ' + img.src));
   }
 
   window.addEventListener('click', e => {
-  const t = e.target;
-  const av = t.closest && t.closest('.mes .avatar');
-  toastr.info(`${t.tagName}.${t.className} | avatar: ${!!av}`);
-  if (!av) return;
-  const img = av.tagName === 'IMG' ? av : av.querySelector('img');
-  if (!img) { toastr.warning('no img'); return; }
-  e.preventDefault();
-  e.stopImmediatePropagation();
-  try { open(img.src); toastr.success('opened'); }
-  catch (err) { toastr.error(String(err)); }
-}, true);
+    const t = e.target;
+    const av = t.closest && t.closest('.mes .avatar');
+    if (!av) return;
+    const img = av.tagName === 'IMG' ? av : av.querySelector('img');
+    if (!img) return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    open(img.src);
+  }, true);
 
   document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
 })();

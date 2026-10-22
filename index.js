@@ -84,14 +84,17 @@ setTimeout(() => window.toastr && toastr.info('Avatar Viewer loaded'), 2000);
   }
 
   window.addEventListener('click', e => {
-    const av = e.target.closest && e.target.closest('.mes .avatar');
-    if (!av) return;
-    const img = av.tagName === 'IMG' ? av : av.querySelector('img');
-    if (!img) return;
-    e.preventDefault();
-    e.stopImmediatePropagation();
-    open(img.src);
-  }, true);
+  const t = e.target;
+  const av = t.closest && t.closest('.mes .avatar');
+  toastr.info(`${t.tagName}.${t.className} | avatar: ${!!av}`);
+  if (!av) return;
+  const img = av.tagName === 'IMG' ? av : av.querySelector('img');
+  if (!img) { toastr.warning('no img'); return; }
+  e.preventDefault();
+  e.stopImmediatePropagation();
+  try { open(img.src); toastr.success('opened'); }
+  catch (err) { toastr.error(String(err)); }
+}, true);
 
   document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
 })();

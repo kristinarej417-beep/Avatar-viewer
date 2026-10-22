@@ -1,3 +1,4 @@
+setTimeout(() => window.toastr && toastr.info('Avatar Viewer loaded'), 2000);
 (() => {
   let overlay = null;
 

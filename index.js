@@ -1,4 +1,32 @@
 (() => {
+  alert('Диагностика: файл загружен');
+  window.addEventListener('error', ev => alert('Ошибка: ' + ev.message));
+  let box = null;
+  window.addEventListener('click', e => {
+    try {
+      if (!box) {
+        box = document.createElement('textarea');
+        box.style.cssText = 'position:fixed;left:0;right:0;bottom:0;height:35vh;z-index:999999;font-size:12px;background:#000;color:#0f0';
+        document.body.appendChild(box);
+      }
+      if (e.target === box) return;
+      const out = [];
+      let n = e.target;
+      for (let i = 0; i < 8 && n && n.tagName; i++, n = n.parentElement) {
+        const bg = getComputedStyle(n).backgroundImage;
+        const cls = typeof n.className === 'string' && n.className.trim()
+          ? '.' + n.className.trim().split(/\s+/).join('.') : '';
+        out.push(
+          n.tagName.toLowerCase() + (n.id ? '#' + n.id : '') + cls +
+          (bg && bg !== 'none' ? ' [bg: ' + bg.slice(0, 120) + ']' : '') +
+          (n.tagName === 'IMG' ? ' [src: ' + n.src.slice(0, 120) + ']' : '')
+        );
+      }
+      box.value = out.join('\n');
+    } catch (err) { alert('Ошибка: ' + err.message); }
+  }, true);
+})();
+(() => {
   let win = null;
 
   function fullSrc(src) {
@@ -121,25 +149,4 @@
       }
     }, true);
   }
-})();
-(() => {
-  const box = document.createElement('textarea');
-  box.style.cssText = 'position:fixed;left:0;right:0;bottom:0;height:35vh;z-index:999999;font-size:12px;background:#000;color:#0f0';
-  document.body.appendChild(box);
-  window.addEventListener('click', e => {
-    if (e.target === box) return;
-    const out = [];
-    let n = e.target;
-    for (let i = 0; i < 8 && n && n.tagName; i++, n = n.parentElement) {
-      const bg = getComputedStyle(n).backgroundImage;
-      const cls = typeof n.className === 'string' && n.className.trim()
-        ? '.' + n.className.trim().split(/\s+/).join('.') : '';
-      out.push(
-        n.tagName.toLowerCase() + (n.id ? '#' + n.id : '') + cls +
-        (bg && bg !== 'none' ? ' [bg: ' + bg.slice(0, 120) + ']' : '') +
-        (n.tagName === 'IMG' ? ' [src: ' + n.src.slice(0, 120) + ']' : '')
-      );
-    }
-    box.value = out.join('\n');
-  }, true);
 })();

@@ -1,15 +1,16 @@
 (() => {
-  alert('Диагностика: файл загружен');
-  window.addEventListener('error', ev => alert('Ошибка: ' + ev.message));
   let box = null;
-  window.addEventListener('click', e => {
+  let log = [];
+  function show(e) {
     try {
       if (!box) {
         box = document.createElement('textarea');
-        box.style.cssText = 'position:fixed;left:0;right:0;bottom:0;height:35vh;z-index:999999;font-size:12px;background:#000;color:#0f0';
+        box.style.cssText = 'position:fixed;left:0;right:0;bottom:0;height:35vh;z-index:2147483647;font-size:12px;background:#000;color:#0f0';
         document.body.appendChild(box);
       }
       if (e.target === box) return;
+      if (e.type === 'pointerdown' || e.type === 'touchstart') log = [];
+      log.push(e.type);
       const out = [];
       let n = e.target;
       for (let i = 0; i < 8 && n && n.tagName; i++, n = n.parentElement) {
@@ -22,9 +23,11 @@
           (n.tagName === 'IMG' ? ' [src: ' + n.src.slice(0, 120) + ']' : '')
         );
       }
-      box.value = out.join('\n');
+      box.value = 'события: ' + log.join(', ') + '\n' + out.join('\n');
     } catch (err) { alert('Ошибка: ' + err.message); }
-  }, true);
+  }
+  ['pointerdown', 'pointerup', 'touchstart', 'touchend', 'mousedown', 'mouseup', 'click']
+    .forEach(t => window.addEventListener(t, show, true));
 })();
 (() => {
   let win = null;

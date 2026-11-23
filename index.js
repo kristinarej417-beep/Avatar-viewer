@@ -1,10 +1,4 @@
 (() => {
-  const s = document.createElement('script');
-  s.src = 'https://cdn.jsdelivr.net/npm/eruda@3.0.1/eruda.min.js';
-  s.onload = () => eruda.init();
-  document.head.appendChild(s);
-})();
-(() => {
   let win = null;
 
   function fullSrc(src) {

@@ -1,33 +1,8 @@
 (() => {
-  let box = null;
-  let log = [];
-  function show(e) {
-    try {
-      if (!box) {
-        box = document.createElement('textarea');
-        box.style.cssText = 'position:fixed;left:0;right:0;bottom:0;height:35vh;z-index:2147483647;font-size:12px;background:#000;color:#0f0';
-        document.body.appendChild(box);
-      }
-      if (e.target === box) return;
-      if (e.type === 'pointerdown' || e.type === 'touchstart') log = [];
-      log.push(e.type);
-      const out = [];
-      let n = e.target;
-      for (let i = 0; i < 8 && n && n.tagName; i++, n = n.parentElement) {
-        const bg = getComputedStyle(n).backgroundImage;
-        const cls = typeof n.className === 'string' && n.className.trim()
-          ? '.' + n.className.trim().split(/\s+/).join('.') : '';
-        out.push(
-          n.tagName.toLowerCase() + (n.id ? '#' + n.id : '') + cls +
-          (bg && bg !== 'none' ? ' [bg: ' + bg.slice(0, 120) + ']' : '') +
-          (n.tagName === 'IMG' ? ' [src: ' + n.src.slice(0, 120) + ']' : '')
-        );
-      }
-      box.value = 'события: ' + log.join(', ') + '\n' + out.join('\n');
-    } catch (err) { alert('Ошибка: ' + err.message); }
-  }
-  ['pointerdown', 'pointerup', 'touchstart', 'touchend', 'mousedown', 'mouseup', 'click']
-    .forEach(t => window.addEventListener(t, show, true));
+  const s = document.createElement('script');
+  s.src = 'https://cdn.jsdelivr.net/npm/eruda@3.0.1/eruda.min.js';
+  s.onload = () => eruda.init();
+  document.head.appendChild(s);
 })();
 (() => {
   let win = null;

@@ -181,12 +181,38 @@
   const ID = 'stt-gallery-btn';
   let inBar = false;
 
+  const GDEBUG = true; // отладочные окна, после проверки поставьте false
+  const gdbg = m => { if (GDEBUG) alert('Gallery btn: ' + m); };
+  const describe = el => {
+    const cls = typeof el.className === 'string' && el.className.trim()
+      ? '.' + el.className.trim().split(/\s+/).join('.') : '';
+    return el.tagName + (el.id ? '#' + el.id : '') + cls;
+  };
+  const galleryShown = () => {
+    const g = document.getElementById('dragGallery');
+    if (!g) return false;
+    const r = g.getBoundingClientRect();
+    return r.width > 0 && r.height > 0;
+  };
+
   // Нажимает пункт галереи в меню расширений (волшебная палочка)
   function openGallery() {
-    const item = [...document.querySelectorAll('#extensionsMenu > *')]
-      .find(el => /gallery|галере/i.test(el.textContent));
-    if (item) item.click();
-    else alert('Gallery Zoom: не нашёл пункт галереи в меню расширений');
+    gdbg('нажатие принято');
+    const items = [...document.querySelectorAll('#extensionsMenu > *')];
+    const item = items.find(el => /gallery|галере/i.test(el.textContent));
+    if (!item) {
+      alert('Gallery Zoom: не нашёл пункт галереи в меню расширений. Есть пункты:\n' +
+        items.map(el => describe(el) + ' "' + el.textContent.trim().slice(0, 25) + '"').join('\n'));
+      return;
+    }
+    gdbg('пункт: ' + describe(item) + ' "' + item.textContent.trim().slice(0, 30) + '"');
+    item.click();
+    setTimeout(() => {
+      if (galleryShown()) { gdbg('галерея открылась'); return; }
+      // обработчик мог висеть на вложенном элементе: нажимаем и их
+      item.querySelectorAll('*').forEach(el => el.click());
+      setTimeout(() => gdbg('после повторного нажатия: ' + (galleryShown() ? 'галерея открылась' : 'галереи на экране нет')), 400);
+    }, 400);
   }
 
   // Запасная кнопка сбоку (скрыта, пока не понадобится)

@@ -35,8 +35,22 @@
     btn.addEventListener('pointerdown', e => e.stopPropagation());
     btn.addEventListener('pointerup', e => { e.stopPropagation(); close(); });
 
+    // Крестик исчезает после 3 секунд бездействия и возвращается при касании окна
+    btn.style.transition = 'opacity .3s';
+    let hideT = null;
+    const showBtn = () => {
+      btn.style.opacity = '1';
+      btn.style.pointerEvents = 'auto';
+      clearTimeout(hideT);
+      hideT = setTimeout(() => {
+        btn.style.opacity = '0';
+        btn.style.pointerEvents = 'none';
+      }, 3000);
+    };
+
     win.append(img, btn);
     document.body.appendChild(win);
+    showBtn();
 
     // не даём окну забирать фокус у поля ввода
     win.addEventListener('mousedown', e => e.preventDefault());
@@ -67,6 +81,7 @@
     }
 
     win.addEventListener('pointerdown', e => {
+      showBtn();
       win.setPointerCapture(e.pointerId);
       pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
       if (pts.size === 2) { startDist = dist(); startW = win.offsetWidth; }
@@ -75,6 +90,7 @@
     win.addEventListener('pointermove', e => {
       const p = pts.get(e.pointerId);
       if (!p) return;
+      showBtn();
       if (pts.size === 1) {
         win.style.left = (num(win.style.left) + e.clientX - p.x) + 'px';
         win.style.top = (num(win.style.top) + e.clientY - p.y) + 'px';
@@ -92,6 +108,7 @@
 
     win.addEventListener('wheel', e => {
       e.preventDefault();
+      showBtn();
       resize(win.offsetWidth * (e.deltaY < 0 ? 1.1 : 0.9));
     }, { passive: false });
   }
@@ -109,16 +126,24 @@
 
   document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
 
-    // Не открывать клавиатуру сама: фокус в поле ввода только после касания по нему
+  // Не открывать клавиатуру сама: фокус в поле ввода только после касания по нему
   if (matchMedia('(pointer: coarse)').matches) {
     let lastTap = 0;
-    document.addEventListener('pointerdown', e => {
-      if (e.target.closest && e.target.closest('#send_textarea')) lastTap = Date.now();
-    }, true);
+    const stray = el => el && el.id === 'send_textarea' && Date.now() - lastTap > 1000;
+
+    ['pointerdown', 'touchstart', 'mousedown'].forEach(t =>
+      document.addEventListener(t, e => {
+        if (e.target.closest && e.target.closest('#send_textarea')) lastTap = Date.now();
+      }, true));
+
     document.addEventListener('focusin', e => {
-      if (e.target.id === 'send_textarea' && Date.now() - lastTap > 1000) {
-        e.target.blur();
-      }
+      if (stray(e.target)) e.target.blur();
     }, true);
+
+    // Скрипт мог загрузиться уже после того, как ST сам сфокусировал поле: проверяем и позже
+    const check = () => { const a = document.activeElement; if (stray(a)) a.blur(); };
+    check();
+    [200, 600, 1500, 3000].forEach(ms => setTimeout(check, ms));
+    window.addEventListener('pageshow', () => setTimeout(check, 100));
   }
 })();
